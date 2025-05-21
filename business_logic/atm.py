@@ -41,3 +41,22 @@ class ATM:
         session.add(trans)
         session.commit()
         return f"✅ Depósito exitoso. Nuevo saldo: ${cuenta.saldo:.2f}"
+    
+    def retirar(self, session: Session, cuenta: Cuenta, monto: float):
+        if cuenta.saldo >= monto:
+            cuenta.saldo -= monto
+            trans = Transaccion(tipo="RETIRO", monto=monto, cuenta=cuenta, fecha_hora=datetime.now())
+            session.add(trans)
+            session.commit()
+            return f"✅ Retiro exitoso. Nuevo saldo: ${cuenta.saldo:.2f}"
+        else:
+            return "❌ Fondos insuficientes."
+
+    def ver_transacciones(self, session: Session, cuenta: Cuenta):
+        transacciones = session.query(Transaccion).filter(Transaccion.cuenta == cuenta).order_by(Transaccion.fecha_hora.desc()).limit(5).all()
+        if not transacciones:
+            return ["ℹ️ No hay transacciones."]
+        return [
+            f"{t.fecha_hora.strftime('%Y-%m-%d %H:%M:%S')} | {t.tipo} | ${t.monto:.2f}"
+            for t in transacciones
+        ]
